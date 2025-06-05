@@ -1,0 +1,12 @@
+services:
+  react-attendance-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+
+
+
+
+

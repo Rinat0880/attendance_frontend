@@ -1,0 +1,67 @@
+{
+  "name": "attendance3",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@fontsource/poppins": "^5.1.0",
+    "@mui/base": "^5.0.0-beta.58",
+    "@mui/icons-material": "^6.1.1",
+    "@mui/material": "^6.1.1",
+    "@mui/x-charts": "^7.18.0",
+    "@mui/x-date-pickers": "^7.18.0",
+    "@react-oauth/google": "^0.12.2",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@types/react": "^18.3.9",
+    "@types/react-dom": "^18.3.0",
+    "axios": "^1.7.7",
+    "date-fns": "^2.30.0",
+    "dayjs": "^1.11.13",
+    "dotenv": "^16.4.5",
+    "i18next": "^23.15.1",
+    "js-cookie": "^3.0.5",
+    "jsqr": "^1.4.0",
+    "leaflet": "^1.9.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-i18next": "^15.0.2",
+    "react-leaflet": "^4.2.1",
+    "react-router-dom": "^6.26.2",
+    "react-scripts": "^5.0.1",
+    "react-webcam": "^7.2.0",
+    "typescript": "^4.9.5",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "@types/js-cookie": "^3.0.6",
+    "@types/leaflet": "^1.9.12",
+    "@types/react-i18next": "^8.1.0"
+  }
+}
