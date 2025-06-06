@@ -125,8 +125,13 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     }
   };
 
+  const handleGoogleForceSelectLogin = () => {
+    const baseUrl = process.env.REACT_APP_BASE_URL;
+    window.location.href = `${baseUrl}/auth/google/force-select`;
+  };
+
   return (
-    <GoogleOAuthProvider clientId="342263866744-e8dra0km8p3gnf4176a3ckrlnqs3uhk9.apps.googleusercontent.com">
+    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID || ""}>
       <Box
         sx={{
           minHeight: "100vh",
@@ -452,6 +457,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                   backgroundColor: "transparent",
                   transform: "none",
                 },
+                mb: 2,
               }}
             >
               <img
@@ -465,6 +471,16 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
                 }}
               />
               Googleでログイン
+            </Button>
+
+            {/* Google Force Select Login */}
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={handleGoogleForceSelectLogin}
+              disabled={isLoading}
+            >
+              別のアカウントを選択
             </Button>
           </Paper>
         </Container>
