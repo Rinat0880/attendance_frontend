@@ -43,6 +43,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
     const newLanguage = event.target.value;
     i18n.changeLanguage(newLanguage);
     setLanguage(newLanguage);
+    localStorage.setItem('lang', newLanguage); // Сохраняем выбранный язык
   };
 
   return (
