@@ -3,7 +3,7 @@ import { Typography, Box, IconButton, Menu, MenuItem, Select, SelectChangeEvent 
 import MenuIcon from '@mui/icons-material/Menu';
 import { styled } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
-import axiosInstance from '../../utils/libs/axios.ts';
+import axiosInstance, { downloadEmployeeQRCodeByHimself } from '../../utils/libs/axios.ts';
 import { useNavigate } from 'react-router-dom';
 
 interface HeaderProps {
@@ -34,6 +34,7 @@ const CustomMenu = styled(Menu)(({ theme }) => ({
 const Header: React.FC<HeaderProps> = ({ onLogout, anchorEl, handleMenuOpen, handleMenuClose }) => {
   const { t, i18n } = useTranslation();
   const [employeeName, setEmployeeName] = useState<string | null>(null);
+  const [employeeId, setEmployeeId] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
@@ -43,9 +44,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, anchorEl, handleMenuOpen, han
   };
 
   const goToBigTable = () => {
-    // Здесь используем относительный путь от текущего местоположения
-    // или абсолютный путь в зависимости от структуры приложения
-    navigate('/bigTable'); // Можно изменить на абсолютный путь, если нужно
+    navigate('/bigTable');
     handleMenuClose();
   };
 
@@ -54,12 +53,28 @@ const Header: React.FC<HeaderProps> = ({ onLogout, anchorEl, handleMenuOpen, han
     navigate("/login");
   };
 
+  const handleDownloadQRCode = async () => {
+    try {
+      if (employeeId) {
+        await downloadEmployeeQRCodeByHimself(employeeId);
+      } else {
+        console.error('従業員IDが見つかりません。');
+      }
+      handleMenuClose();
+    } catch (error) {
+      console.error('QRコードのダウンロード中にエラーが発生しました。', error);
+    }
+  };
+
   const fetchEmployeeName = async () => {
     try {
       const response = await axiosInstance().get('/user/dashboard');
 
       if (response.data && response.data.status && response.data.employee) {
         setEmployeeName(response.data.employee);
+        if (response.data.employee_id) {
+          setEmployeeId(response.data.employee_id);
+        }
       } else {
         console.error('従業員名を取得できませんでした。APIの応答に必要なデータが含まれていません。', response.data);
       }
@@ -113,6 +128,9 @@ const Header: React.FC<HeaderProps> = ({ onLogout, anchorEl, handleMenuOpen, han
           }}
         >
           <MenuItem onClick={goToBigTable}>{t('goBigTable') || 'Dashboard View'}</MenuItem>
+          <MenuItem onClick={handleDownloadQRCode}>
+            Qrcode
+          </MenuItem>
           <MenuItem>
             <Select
               value={i18n.language}

@@ -474,6 +474,43 @@ export const downloadEmployeeQRCode = async (employee_id: string) => {
   }
 };
 
+export const downloadEmployeeQRCodeByHimself = async (employee_id: string) => {
+  try {
+    const response = await axiosInstance().get(`/user/qrcodehimself`, {
+      params: { employee_id },
+      responseType: "blob",
+    });
+
+    if (response && response.status === 200 && response.data) {
+      const blob = new Blob([response.data], { type: "image/png" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `employee_${employee_id}_qrcode.png`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      return response.data;
+    } else {
+      throw new Error(
+        "QRコードのダウンロードに失敗しました。サーバーが無効な応答を返しました。"
+      );
+    }
+  } catch (error) {
+    console.error(
+      "従業員のQRコードのダウンロード中にエラーが発生しました。",
+      error
+    );
+    if (axios.isAxiosError(error) && error.response) {
+      console.error("応答ステータス：", error.response.status);
+      console.error("応答データ：", error.response.data);
+    }
+    throw error;
+  }
+};
+
 export const fetchQRCodeList = async (): Promise<Blob> => {
   const response = await axiosInstance().get("/user/qrcodelist", {
     responseType: "blob",
