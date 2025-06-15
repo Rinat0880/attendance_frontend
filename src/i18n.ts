@@ -123,7 +123,7 @@ const userResources = {
       statusC: {
         early_come: '早出',
         early_leave: '早退',
-        absent: '出社／外出',
+        absent: '外出',
         late: '遅刻',
       },
       weeklyTimesheet: {
