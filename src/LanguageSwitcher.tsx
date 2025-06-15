@@ -6,7 +6,9 @@ const LanguageSwitcher: React.FC = () => {
   const { i18n, t } = useTranslation();
 
   const changeLanguage = (event: SelectChangeEvent) => {
-    i18n.changeLanguage(event.target.value);
+    const lang = event.target.value;
+    i18n.changeLanguage(lang);
+    localStorage.setItem('lang', lang); // Сохраняем выбранный язык
   };
 
   return (

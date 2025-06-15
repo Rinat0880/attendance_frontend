@@ -75,10 +75,10 @@ export default function PieChartWithCenterLabel() {
   const getPieData = React.useCallback(async () => {
     try {
       const response = await axiosInstance().get('/attendance/piechart');
-  
+
       const pieValue: PieData = response.data.data;
       const colors = response.data.Colors; // Get colors from the response
-  
+
       setData([
         { value: pieValue.come, label: t('pieChart.come'), color: colors.present_color },
         { value: pieValue.absent, label: t('pieChart.absent'), color: colors.absent_color },
@@ -87,7 +87,7 @@ export default function PieChartWithCenterLabel() {
       console.log('Error fetching pie chart data:', err);
     }
   }, [t]);
-  
+
   useEffect(() => {
     getPieData();
   }, [getPieData]);

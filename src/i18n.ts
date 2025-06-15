@@ -492,6 +492,8 @@ const adminResources = {
 };
 
 
+// Получаем язык из localStorage или используем 'ja' по умолчаниюAdd commentMore actions
+const savedLang = localStorage.getItem('lang') || 'ja';
 i18n
   .use(initReactI18next)
   .init({
@@ -507,7 +509,7 @@ i18n
         ...adminResources.ja, 
       },
     },
-    lng: 'ja', // Default language
+    lng: savedLang,
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false,
