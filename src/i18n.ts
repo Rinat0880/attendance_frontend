@@ -48,10 +48,10 @@ const commonResources = {
       fullName: 'フルネーム',
       goBigTable: '出社表',
       status: '状態',
-      present: '出席',
-      absent: '欠席',
+      present: '出社',
+      absent: '未出社／外出',
       table: {
-        title: '出席時間',
+        title: '時間',
         searchBtn: '検索',
         searchPlaceholder: '氏名の検索...',
       },
@@ -113,15 +113,15 @@ const userResources = {
   },
   ja: {
     user: {
-      checkInTime: '出席時間',
+      checkInTime: '出社時間',
       checkOutTime: '退勤時間',
       totalWorkHours: '総労働時間',
-      checkIn: '出席',
+      checkIn: '出社',
       checkOut: '退勤',
       statusC: {
         early_come: '早出',
         early_leave: '早退',
-        absent: '欠席',
+        absent: '未出社／外出',
         late: '遅刻',
       },
       weeklyTimesheet: {
@@ -323,9 +323,9 @@ const adminResources = {
 
   ja: {
     admin: {
-      totalEmployee: '総従業員',
-      onTime: '時間通り',
-      absent: '欠席',
+      totalEmployee: 'スタッフ数',
+      onTime: '通常出社／退社',
+      absent: '未出社／外出',
       lateArrival: '遅刻',
       earlyDepartures: '早退',
       earlyCome: '早出',
@@ -336,10 +336,10 @@ const adminResources = {
       position: '役職',
       workDay: '勤務日',
       status: '状態',
-      comeTime: '出席時間',
+      comeTime: '出社時間',
       leaveTime: '退勤時間',
       totalHours: '総労働時間',
-      barLabel: '部署別出席率',
+      barLabel: '部署別出社率',
 
       departmentTable: {
         departmentName: '部署名',
@@ -379,12 +379,12 @@ const adminResources = {
         departmentAndPosition: '部署と役職',
         employeeEdit: '従業員の編集',
         companySettings: '会社の設定',
-        newTable: '出席表',
+        newTable: '出社表',
       },
 
       pieChart: {
-        come: '出席',
-        absent: '欠席',
+        come: '出社',
+        absent: '欠未出社／外出席',
       },
 
       employeeList: {
@@ -449,7 +449,7 @@ const adminResources = {
         logoBtn: 'アップロード',
         chapter1Title: '会社概要',
         chapter2Title: '会社所在地',
-        chapter3Title: '出席ルール',
+        chapter3Title: '出社ルール',
         coordinatesLabel: '会社の座標',
         radiusLabel: '会社半径',
         startLabel: '開始時間',
@@ -460,13 +460,13 @@ const adminResources = {
         overStartTitle: '開始: ',
         overEndTitle: '終了: ',
         colorSettingsTitle: "カラー設定",
-        absentColor: "欠席カラー設定",
-        presentColor: "出席カラー設定",
+        absentColor: "未出社／外出カラー設定",
+        presentColor: "出社カラー設定",
         comeTimeColor: "来店時間カラー設定",
         leaveTimeColor: "退店時間カラー設定",
         forgetTimeColor: "忘れる時間カラー設定",
-        newAbsentColor: "新しいテーブル欠席カラー設定",
-        newPresentColor: "新しいテーブル出席カラー設定",
+        newAbsentColor: "新しいテーブル未出社／外出カラー設定",
+        newPresentColor: "新しいテーブル出社カラー設定",
         changeColor: 'Change Color',
         saveBtn: 'すべて保存',
         selectedFile: '選択されたファイル',
@@ -475,7 +475,7 @@ const adminResources = {
         boldOff: "オフ",
       },
       lineChart: {
-        title: '出席状況グラフ',
+        title: '出社状況グラフ',
         selectMonth: '月と年を選択',
         interval: {
           first: '1日-10日',
