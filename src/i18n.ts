@@ -14,6 +14,7 @@ const commonResources = {
       fullName: 'Full Name',
       status: 'Status',
       goBigTable: 'Big Table',
+      qrCode: 'Qr Code',
       present: 'Present',
       absent: 'Absent',
       table: {
@@ -47,6 +48,7 @@ const commonResources = {
       employeeId: 'ID',
       fullName: 'フルネーム',
       goBigTable: '出社表',
+      qrCode: 'QRコード',
       status: '状態',
       present: '出社',
       absent: '未出社／外出',
@@ -121,7 +123,7 @@ const userResources = {
       statusC: {
         early_come: '早出',
         early_leave: '早退',
-        absent: '未出社／外出',
+        absent: '出社／外出',
         late: '遅刻',
       },
       weeklyTimesheet: {

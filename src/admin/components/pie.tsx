@@ -81,7 +81,7 @@ export default function PieChartWithCenterLabel() {
 
       setData([
         { value: pieValue.come, label: t('pieChart.come'), color: colors.present_color },
-        { value: pieValue.absent, label: t('pieChart.absent'), color: colors.absent_color },
+        { value: pieValue.absent, label: '', color: colors.absent_color },
       ]);
     } catch (err) {
       console.log('Error fetching pie chart data:', err);
@@ -129,8 +129,8 @@ export default function PieChartWithCenterLabel() {
         <LegendContainer>
           {data.map((item, index) => (
             <LegendItem key={index}>
-              <ColorIndicator bgcolor={item.color} />
-              <LegendText>{item.label}</LegendText>
+              {item.label && <ColorIndicator bgcolor={item.color} />}
+              {item.label && <LegendText>{item.label}</LegendText>}
             </LegendItem>
           ))}
         </LegendContainer>

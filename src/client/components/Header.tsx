@@ -159,7 +159,7 @@ const Header: React.FC<HeaderProps> = ({ onLogout, anchorEl, handleMenuOpen, han
           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         >
           <MenuItem onClick={goToBigTable}>{t('goBigTable') || 'Dashboard View'}</MenuItem>
-          <MenuItem onClick={handleDownloadQRCode}>Qrcode</MenuItem>
+          <MenuItem onClick={handleDownloadQRCode}>{t('qrCode')}</MenuItem>
           <MenuItem onClick={handleLogoutClick}>{t('logout')}</MenuItem>
         </CustomMenu>
       </Box>
