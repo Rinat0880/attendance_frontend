@@ -32,7 +32,7 @@ export const useErrorHandler = () => {
         errors.phone = "入力は半角文字のみ使用可能";
         return errors;
 
-      case errorMessage.includes("メールアドレス はすでに使用されています。"):
+      case errorMessage.includes("メールアドレス はすでに使用されています。"):
         errors.email = errorMessage;
         return errors;
 
@@ -70,7 +70,7 @@ export const useErrorHandler = () => {
     }
   };
 
-  // Make the function more generic to work with any form data object 入力は半角文字のみ使用可能 'employee_id'
+  // Remove position validation - it's no longer required
   const validateForm = (data: any): FormErrors => {
     const errors: FormErrors = {};
 
@@ -98,9 +98,10 @@ export const useErrorHandler = () => {
       errors.department = t("errors.requiredField");
     }
 
-    if (data.department && (!data.position || data.position.trim() === "")) {
-      errors.position = t("errors.requiredField");
-    }
+    // Position is no longer required - removed this validation:
+    // if (data.department && (!data.position || data.position.trim() === "")) {
+    //   errors.position = t("errors.requiredField");
+    // }
 
     if (data.nick_name && data.nick_name.length > 7) {
       errors.nick_name = "ニックネームは7文字以内で入力してください";

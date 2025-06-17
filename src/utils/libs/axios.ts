@@ -253,7 +253,7 @@ export const createUser = async (
   first_name: string,
   last_name: string,
   department_id: number,
-  position_id: number,
+  position_id: number | null, // Allow null for optional position
   phone: string,
   email: string,
   nick_name?: string
@@ -289,7 +289,7 @@ export const updateUser = async (
   first_name: string,
   last_name: string,
   department_id: number,
-  position_id: number,
+  position_id: number | null, // Allow null for optional position
   phone: string,
   email: string,
   nick_name?: string

@@ -85,7 +85,9 @@ const CreateEmployeeModal: React.FC<CreateEmployeeModalProps> = ({
         );
         setFilteredPositions(positionsForDepartment);
 
+        // Only clear position if it doesn't belong to the new department
         if (
+          newEmployee.position &&
           !positionsForDepartment.some((p) => p.name === newEmployee.position)
         ) {
           setNewEmployee((prev) => ({ ...prev, position: "" }));
@@ -120,7 +122,7 @@ const CreateEmployeeModal: React.FC<CreateEmployeeModalProps> = ({
       setNewEmployee({
         ...newEmployee,
         [name]: value,
-        position: "",
+        position: "", // Clear position when department changes
       });
 
       setErrors((prev) => ({
@@ -148,14 +150,23 @@ const CreateEmployeeModal: React.FC<CreateEmployeeModalProps> = ({
       const departmentId = departments.find(
         (d) => d.name === newEmployee.department
       )?.id;
-      const positionId = positions.find(
-        (p) => p.name === newEmployee.position
-      )?.id;
 
-      if (!departmentId || !positionId) {
+      // Position is now optional - can be null
+      const positionId = newEmployee.position 
+        ? positions.find((p) => p.name === newEmployee.position)?.id ?? null
+        : null;
+
+      if (!departmentId) {
         setErrors({
-          department: !departmentId ? t("errors.invalidDepartment") : undefined,
-          position: !positionId ? t("errors.invalidPosition") : undefined,
+          department: t("errors.invalidDepartment"),
+        });
+        return;
+      }
+
+      // If position is specified but invalid, show error
+      if (newEmployee.position && positionId === null) {
+        setErrors({
+          position: t("errors.invalidPosition"),
         });
         return;
       }
@@ -167,7 +178,7 @@ const CreateEmployeeModal: React.FC<CreateEmployeeModalProps> = ({
         newEmployee.first_name!,
         newEmployee.last_name!,
         departmentId,
-        positionId,
+        positionId, // Now correctly typed as number | null
         newEmployee.phone!,
         newEmployee.email!,
         newEmployee.nick_name || ""
@@ -322,10 +333,10 @@ const CreateEmployeeModal: React.FC<CreateEmployeeModalProps> = ({
             )}
           </FormControl>
 
+          {/* Position is now optional - removed required prop */}
           <FormControl
             fullWidth
             margin="dense"
-            required
             error={Boolean(errors.position)}
           >
             <InputLabel id="position-select-label">
@@ -339,6 +350,10 @@ const CreateEmployeeModal: React.FC<CreateEmployeeModalProps> = ({
               label={t("createEmployeeModal.position")}
               disabled={!newEmployee.department}
             >
+              {/* Add empty option for optional selection */}
+              <MenuItem value="">
+                <em>選択なし</em>
+              </MenuItem>
               {filteredPositions.map((position) => (
                 <MenuItem key={position.id} value={position.name}>
                   {position.name}

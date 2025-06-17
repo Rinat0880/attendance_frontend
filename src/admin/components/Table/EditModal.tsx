@@ -61,9 +61,7 @@ const EditModal: React.FC<EditModalProps> = ({
       setFormData({
         ...data,
         password: "", // Password always empty for security
-        // Ensure role is properly passed from existing data
-        role: data.role || "", // Use existing role or empty string as fallback
-        // Also ensure all required fields are properly mapped
+        role: data.role || "",
         first_name: data.first_name || "",
         last_name: data.last_name || "",
         employee_id: data.employee_id || "",
@@ -72,7 +70,6 @@ const EditModal: React.FC<EditModalProps> = ({
         nick_name: data.nick_name || "",
         department: data.department || "",
         position: data.position || "",
-        // Include other necessary fields
         id: data.id,
         full_name: data.full_name || "",
         forget_leave: data.forget_leave || false,
@@ -92,7 +89,8 @@ const EditModal: React.FC<EditModalProps> = ({
         );
         setFilteredPositions(positionsForDepartment);
         
-        if (!positionsForDepartment.some(p => p.name === formData.position)) {
+        // Only clear position if it doesn't belong to the new department
+        if (formData.position && !positionsForDepartment.some(p => p.name === formData.position)) {
           setFormData(prev => prev ? { ...prev, position: "" } : null);
         }
       }
@@ -133,7 +131,7 @@ const EditModal: React.FC<EditModalProps> = ({
         setFormData({
           ...formData,
           [name]: value,
-          position: "" 
+          position: "" // Clear position when department changes
         });
         
         setErrors(prev => ({
@@ -165,14 +163,23 @@ const EditModal: React.FC<EditModalProps> = ({
       const departmentId = departments.find(
         (d) => d.name === formData.department
       )?.id;
-      const positionId = positions.find(
-        (p) => p.name === formData.position
-      )?.id;
 
-      if (!departmentId || !positionId) {
+      // Position is now optional - can be null
+      const positionId = formData.position 
+        ? positions.find((p) => p.name === formData.position)?.id ?? null
+        : null;
+
+      if (!departmentId) {
         setErrors({
-          department: !departmentId ? t("errors.invalidDepartment") : undefined,
-          position: !positionId ? t("errors.invalidPosition") : undefined,
+          department: t("errors.invalidDepartment"),
+        });
+        return;
+      }
+
+      // If position is specified but invalid, show error
+      if (formData.position && positionId === null) {
+        setErrors({
+          position: t("errors.invalidPosition"),
         });
         return;
       }
@@ -185,7 +192,7 @@ const EditModal: React.FC<EditModalProps> = ({
         formData.first_name!,
         formData.last_name!,
         departmentId,
-        positionId,
+        positionId, // Now correctly typed as number | null
         formData.phone!,
         formData.email!,
         formData.nick_name || ""
@@ -296,11 +303,10 @@ const EditModal: React.FC<EditModalProps> = ({
             </InputLabel>
             <Select
               name="role"
-              value={formData.role || ""} // Ensure we always have a string value
+              value={formData.role || ""}
               label={t("createEmployeeModal.role")}
               onChange={handleSelectChange}
-              displayEmpty // This helps with empty values
-              onOpen={() => console.log("Select opened, current role value:", formData.role)} // Debug log
+              displayEmpty
             >
               <MenuItem value="ADMIN">
                 {t("createEmployeeModal.roleAdmin")}
@@ -336,10 +342,10 @@ const EditModal: React.FC<EditModalProps> = ({
             {errors.department && <FormHelperText>{errors.department}</FormHelperText>}
           </FormControl>
           
+          {/* Position is now optional - removed required prop */}
           <FormControl 
             fullWidth 
             margin="dense" 
-            required
             error={Boolean(errors.position)}
           >
             <InputLabel shrink={Boolean(formData.position)}>
@@ -352,6 +358,10 @@ const EditModal: React.FC<EditModalProps> = ({
               onChange={handleSelectChange}
               disabled={!formData.department}
             >
+              {/* Add empty option for optional selection */}
+              <MenuItem value="">
+                <em>選択なし</em>
+              </MenuItem>
               {filteredPositions.map((position) => (
                 <MenuItem key={position.id} value={position.name}>
                   {position.name}
