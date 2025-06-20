@@ -47,7 +47,7 @@ const QRCodeScanner: React.FC = () => {
       let messageType: 'check-in' | 'check-out' | 'error' | null = null;
   
       if (response.status) {
-        // Успешный случай
+        // Successful case
         messageType = response.data?.come_time ? 'check-in' : 'check-out';
   
         setScanState(prev => ({
@@ -62,7 +62,7 @@ const QRCodeScanner: React.FC = () => {
           message: `${response.message || ''}` 
         });
       } else {
-        // Случай ошибки
+        // Error case
         setScanState(prev => ({
           ...prev,
           serverMessage: response.error || '不明なエラー',
@@ -76,7 +76,7 @@ const QRCodeScanner: React.FC = () => {
         });
       }
     } catch (error) {
-      // Обработка ошибок сети
+      // Network error handling
       console.error('データ送信エラー:', error);
       setScanState(prev => ({
         ...prev,
@@ -93,7 +93,6 @@ const QRCodeScanner: React.FC = () => {
       setScanState(prev => ({ ...prev, isProcessing: false }));
     }
   }, []);
-  
   
 
   const videoConstraints = useMemo(() => ({
@@ -116,7 +115,8 @@ const QRCodeScanner: React.FC = () => {
       const sourceWidth = image.width;
       const sourceHeight = image.height;
       
-      const scanAreaSize = Math.min(sourceWidth, sourceHeight) * 0.4;
+      // Minimal processing for speed
+      const scanAreaSize = Math.min(sourceWidth, sourceHeight) * 0.3; // Smaller area = faster processing
       const startX = (sourceWidth - scanAreaSize) / 2;
       const startY = (sourceHeight - scanAreaSize) / 2;
       
@@ -126,43 +126,14 @@ const QRCodeScanner: React.FC = () => {
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
       
-      // Применяем фильтры для улучшения качества изображения
-      ctx.filter = 'contrast(120%) brightness(90%) saturate(80%)';
-      
-      // Вырезаем и рисуем центральную область
+      // Minimal processing for maximum speed
       ctx.drawImage(
         image,
         startX, startY, scanAreaSize, scanAreaSize,
         0, 0, scanAreaSize, scanAreaSize
       );
 
-      // Применяем дополнительную обработку изображения
       const imageData = ctx.getImageData(0, 0, scanAreaSize, scanAreaSize);
-      const data = imageData.data;
-      
-      // Применяем алгоритм адаптивной коррекции яркости
-      let max = 0;
-      let min = 255;
-      
-      // Находим максимальное и минимальное значения яркости
-      for (let i = 0; i < data.length; i += 4) {
-        const brightness = (data[i] + data[i + 1] + data[i + 2]) / 3;
-        if (brightness > max) max = brightness;
-        if (brightness < min) min = brightness;
-      }
-      
-      // Корректируем контраст и яркость
-      const range = max - min;
-      const factor = 255 / range;
-      
-      for (let i = 0; i < data.length; i += 4) {
-        for (let j = 0; j < 3; j++) {
-          data[i + j] = Math.min(255, Math.max(0, (data[i + j] - min) * factor));
-        }
-      }
-      
-      ctx.putImageData(imageData, 0, 0);
-      
       const code = jsQR(imageData.data, imageData.width, imageData.height);
       
       if (code) {
@@ -173,7 +144,7 @@ const QRCodeScanner: React.FC = () => {
 
   useEffect(() => {
     if (scanState.isScanning) {
-      scanningInterval.current = setInterval(capture, 1000);
+      scanningInterval.current = setInterval(capture, 150); // Much faster scanning
       return () => clearInterval(scanningInterval.current);
     } else {
       resetTimeout.current = setTimeout(() => {
@@ -213,14 +184,13 @@ const QRCodeScanner: React.FC = () => {
       width: '100%',
       height: '100%',
       objectFit: 'cover' as const,
-      filter: 'contrast(120%) brightness(90%)', 
     },
     overlay: {
       position: 'absolute' as const,
       top: '50%',
       left: '50%',
       transform: 'translate(-50%, -50%)',
-      width: '40%',
+      width: '30%', // Smaller overlay to match processing area
       aspectRatio: '1 / 1',
       border: '2px solid rgba(255, 255, 255, 0.8)',
       boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.7)',
@@ -313,7 +283,7 @@ const QRCodeScanner: React.FC = () => {
             screenshotFormat="image/jpeg"
             videoConstraints={videoConstraints}
             style={scannerStyles.webcam}
-            imageSmoothing={false} // Отключаем сглаживание для лучшей четкости
+            imageSmoothing={false} // Disable smoothing for better sharpness
           />
           <Box sx={scannerStyles.overlay}>
             <Box sx={scannerStyles.cornerTopLeft} />
@@ -322,9 +292,13 @@ const QRCodeScanner: React.FC = () => {
             <Box sx={scannerStyles.cornerBottomRight} />
             <Box sx={scannerStyles.scanLine} />
           </Box>
+          
           <Box sx={scannerStyles.instruction}>
             <Typography variant="h6" sx={{ marginBottom: 1 }}>
               QRコードを枠内に合わせてください
+            </Typography>
+            <Typography variant="body1" sx={{ marginBottom: 1 }}>
+               デバイスを20cm以上離してください
             </Typography>
             <Typography variant="body1">
               コードが鮮明に見えるように調整してください
