@@ -7,7 +7,6 @@ import {
   ThemeProvider,
   createTheme,
 } from '@mui/material';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { useTranslation } from 'react-i18next';
 
 interface DeleteConfirmationModalProps {
@@ -43,13 +42,6 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
       <Modal open={open} onClose={onClose}>
         <Box sx={modalStyle}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-            <WarningAmberIcon 
-              sx={{ 
-                color: '#ff9800', 
-                fontSize: 32, 
-                mr: 2 
-              }} 
-            />
             <Typography variant="h6" sx={{ fontWeight: 600, color: '#333' }}>
               {t('employeeTable.deleteConfirmTitle')}
             </Typography>

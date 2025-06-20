@@ -97,8 +97,8 @@ const EmployeeListPage: React.FC = () => {
       id: employee.id,
       employee_id: employee.employee_id,
       full_name: employee.full_name,
-      first_name: employee.first_name || employee.full_name.split(' ')[0], // Use existing first_name or fallback
-      last_name: employee.last_name || employee.full_name.split(' ')[1] || '', // Use existing last_name or fallback
+      first_name: employee.first_name || employee.full_name.split(' ')[1], // Use existing first_name or fallback
+      last_name: employee.last_name || employee.full_name.split(' ')[0] || '', // Use existing last_name or fallback
       nick_name: employee.nick_name, 
       role: employee.role || "", // Don't set default, let it be empty if not provided
       department: employee.department,

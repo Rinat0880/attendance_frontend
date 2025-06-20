@@ -92,7 +92,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
           // Добавляем все остальные поля, которые могут понадобиться
           first_name: item.first_name,
           last_name: item.last_name,
-          password: "", // Пароль не передаем из соображений безопасности
+          password: "", // Пароль не передаем 
           forget_leave: item.forget_leave || false,
         }));
         setData(formattedData);
