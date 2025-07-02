@@ -1,9 +1,10 @@
 import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import Webcam from 'react-webcam';
 import jsQR from 'jsqr';
-import { Box, Typography, Paper, Snackbar, CircularProgress } from '@mui/material';
+import { Box, Typography, Paper, Snackbar, CircularProgress, IconButton, Tooltip } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
+import CameraswitchIcon from '@mui/icons-material/Cameraswitch';
 import { createByQRCode } from '../../utils/libs/axios.ts';
 
 interface ServerResponse {
@@ -55,6 +56,12 @@ const isMobileDevice = () => {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 };
 
+// Utility to detect tablet devices
+const isTabletDevice = () => {
+  return /iPad|Android(?=.*Tablet)|Tablet/i.test(navigator.userAgent) || 
+         (window.innerWidth >= 768 && window.innerWidth <= 1366); // Extended range for iPad Pro
+};
+
 const QRCodeScanner: React.FC = () => {
   const [scanState, setScanState] = useState({
     result: null as string | null,
@@ -69,6 +76,9 @@ const QRCodeScanner: React.FC = () => {
     open: false,
     message: ''
   });
+
+  // Camera facing mode state
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>('environment');
   
   const webcamRef = useRef<Webcam | null>(null);
   const scanningInterval = useRef<NodeJS.Timeout>();
@@ -80,18 +90,84 @@ const QRCodeScanner: React.FC = () => {
     mountedRef.current = true;
     debugLog('Component mounted', { isMobile: isMobileDevice() });
     
+    // Prevent scrolling and zooming on iOS devices
+    const preventScrolling = (e: TouchEvent) => {
+      if (e.touches.length > 1) {
+        e.preventDefault(); // Prevent pinch zoom
+      }
+    };
+    
+    const preventDefaultScroll = (e: Event) => {
+      e.preventDefault();
+    };
+    
+    // Add event listeners to prevent scrolling
+    document.addEventListener('touchmove', preventScrolling, { passive: false });
+    document.addEventListener('gesturestart', preventDefaultScroll, { passive: false });
+    document.addEventListener('gesturechange', preventDefaultScroll, { passive: false });
+    document.addEventListener('gestureend', preventDefaultScroll, { passive: false });
+    
+    // Set body styles to prevent scrolling
+    const originalBodyStyle = {
+      overflow: document.body.style.overflow,
+      position: document.body.style.position,
+      width: document.body.style.width,
+      height: document.body.style.height,
+      touchAction: document.body.style.touchAction
+    };
+    
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    document.body.style.touchAction = 'none';
+    
+    // Prevent viewport zooming on iOS
+    const viewport = document.querySelector('meta[name="viewport"]');
+    let originalViewport = '';
+    if (viewport) {
+      originalViewport = viewport.getAttribute('content') || '';
+      viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+    }
+    
     return () => {
       mountedRef.current = false;
       debugLog('Component unmounting, clearing intervals');
-      // Clean up all intervals and timeouts
+      
+      // Clean up intervals and timeouts
       if (scanningInterval.current) {
         clearInterval(scanningInterval.current);
       }
       if (resetTimeout.current) {
         clearTimeout(resetTimeout.current);
       }
+      
+      // Remove event listeners
+      document.removeEventListener('touchmove', preventScrolling);
+      document.removeEventListener('gesturestart', preventDefaultScroll);
+      document.removeEventListener('gesturechange', preventDefaultScroll);
+      document.removeEventListener('gestureend', preventDefaultScroll);
+      
+      // Restore original body styles
+      document.body.style.overflow = originalBodyStyle.overflow;
+      document.body.style.position = originalBodyStyle.position;
+      document.body.style.width = originalBodyStyle.width;
+      document.body.style.height = originalBodyStyle.height;
+      document.body.style.touchAction = originalBodyStyle.touchAction;
+      
+      // Restore original viewport
+      if (viewport && originalViewport) {
+        viewport.setAttribute('content', originalViewport);
+      }
     };
   }, []);
+
+  // Toggle camera function
+  const toggleCamera = useCallback(() => {
+    const newFacingMode = facingMode === 'environment' ? 'user' : 'environment';
+    setFacingMode(newFacingMode);
+    debugLog('Camera toggled', { from: facingMode, to: newFacingMode });
+  }, [facingMode]);
 
   const processQRCode = useCallback(async (code: string) => {
     // Prevent multiple simultaneous processing
@@ -185,11 +261,11 @@ const QRCodeScanner: React.FC = () => {
   }, []);
 
   const videoConstraints = useMemo(() => ({
-    facingMode: 'environment', // Changed to back camera for better scanning on mobile
+    facingMode: facingMode, // Use dynamic facing mode
     width: { ideal: 1280 }, 
     height: { ideal: 720 }, 
     aspectRatio: 1, 
-  }), []);
+  }), [facingMode]);
   
   const capture = useCallback(() => {
     if (!mountedRef.current) {
@@ -224,9 +300,17 @@ const QRCodeScanner: React.FC = () => {
           
           debugLog('Image loaded', { width: sourceWidth, height: sourceHeight });
           
-          // Increased scan area for mobile devices
+          // Increased scan area for different devices
           const isMobile = isMobileDevice();
-          const scanAreaMultiplier = isMobile ? 0.6 : 0.4; // 60% for mobile, 40% for desktop
+          const isTablet = isTabletDevice();
+          let scanAreaMultiplier = 0.4; // Default for desktop
+          
+          if (isTablet) {
+            scanAreaMultiplier = 0.5; // 50% for tablets
+          } else if (isMobile) {
+            scanAreaMultiplier = 0.6; // 60% for phones
+          }
+          
           const scanAreaSize = Math.min(sourceWidth, sourceHeight) * scanAreaMultiplier;
           const startX = (sourceWidth - scanAreaSize) / 2;
           const startY = (sourceHeight - scanAreaSize) / 2;
@@ -346,7 +430,15 @@ const QRCodeScanner: React.FC = () => {
   // Dynamic scan area size based on device type
   const scanAreaSize = useMemo(() => {
     const isMobile = isMobileDevice();
-    return isMobile ? '60%' : '35%'; // Larger overlay for mobile devices
+    const isTablet = isTabletDevice();
+    
+    if (isTablet) {
+      return '45%'; // Medium size for tablets
+    } else if (isMobile) {
+      return '60%'; // Larger for phones
+    } else {
+      return '35%'; // Smaller for desktop
+    }
   }, []);
 
   const scannerStyles = useMemo(() => ({
@@ -354,7 +446,20 @@ const QRCodeScanner: React.FC = () => {
       height: '100vh',
       width: '100vw',
       position: 'relative' as const,
-      overflow: 'hidden'
+      overflow: 'hidden',
+      // Aggressive scroll prevention for iOS
+      touchAction: 'none',
+      userSelect: 'none',
+      WebkitUserSelect: 'none',
+      MozUserSelect: 'none',
+      msUserSelect: 'none',
+      WebkitTouchCallout: 'none',
+      WebkitTapHighlightColor: 'transparent',
+      // Prevent iOS safari UI changes
+      WebkitOverflowScrolling: 'touch',
+      // Ensure full viewport usage
+      minHeight: '100vh',
+      minWidth: '100vw'
     },
     webcam: {
       width: '100%',
@@ -426,6 +531,18 @@ const QRCodeScanner: React.FC = () => {
       zIndex: 2,
       width: '90%', // Increased width for mobile
       textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)'
+    },
+    // Camera toggle button styles
+    cameraToggle: {
+      position: 'absolute' as const,
+      top: '20px',
+      right: '20px',
+      zIndex: 10,
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      color: 'white',
+      '&:hover': {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      }
     }
   }), [scanAreaSize]);
 
@@ -481,6 +598,12 @@ const QRCodeScanner: React.FC = () => {
           Mobile Device: {isMobileDevice() ? 'Yes' : 'No'}
         </Typography>
         <Typography variant="caption" display="block">
+          Tablet Device: {isTabletDevice() ? 'Yes' : 'No'}
+        </Typography>
+        <Typography variant="caption" display="block">
+          Camera: {facingMode === 'environment' ? 'Back' : 'Front'}
+        </Typography>
+        <Typography variant="caption" display="block">
           Scan Area: {scanAreaSize}
         </Typography>
         <Typography variant="caption" display="block">
@@ -488,10 +611,22 @@ const QRCodeScanner: React.FC = () => {
         </Typography>
       </Box>
     );
-  }, [scanState.isScanning, scanState.isProcessing, scanAreaSize]);
+  }, [scanState.isScanning, scanState.isProcessing, scanAreaSize, facingMode]);
 
   return (
-    <Box sx={scannerStyles.container}>
+    <Box sx={{
+      ...scannerStyles.container,
+      // Force fixed positioning for iPad
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 1000,
+      // Additional iOS specific fixes
+      WebkitTransform: 'translate3d(0,0,0)', // Force hardware acceleration
+      transform: 'translate3d(0,0,0)'
+    }}>
       {scanState.isScanning ? (
         <>
           <style>{ScanAnimation}</style>
@@ -505,6 +640,18 @@ const QRCodeScanner: React.FC = () => {
             onUserMedia={() => debugLog('Webcam stream started')}
             onUserMediaError={(error) => debugLog('Webcam error', { error })}
           />
+          
+          {/* Camera Toggle Button */}
+          <Tooltip title={facingMode === 'environment' ? 'フロントカメラに切り替え' : 'バックカメラに切り替え'}>
+            <IconButton 
+              sx={scannerStyles.cameraToggle}
+              onClick={toggleCamera}
+              size="large"
+            >
+              <CameraswitchIcon sx={{ fontSize: '2rem' }} />
+            </IconButton>
+          </Tooltip>
+          
           <Box sx={scannerStyles.overlay}>
             <Box sx={scannerStyles.cornerTopLeft} />
             <Box sx={scannerStyles.cornerTopRight} />
