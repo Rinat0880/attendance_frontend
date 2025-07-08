@@ -20,37 +20,6 @@ interface ServerResponse {
   status: boolean;
 }
 
-// Debug logger utility for Safari debugging
-const debugLog = (message: string, data?: any) => {
-  const timestamp = new Date().toISOString();
-  console.log(`[QR Scanner ${timestamp}] ${message}`, data || '');
-  
-  // Show debug info on screen for Safari debugging
-  if (typeof window !== 'undefined' && window.location.search.includes('debug=true')) {
-    const debugDiv = document.getElementById('debug-info') || (() => {
-      const div = document.createElement('div');
-      div.id = 'debug-info';
-      div.style.cssText = `
-        position: fixed; 
-        top: 10px; 
-        left: 10px; 
-        background: rgba(0,0,0,0.8); 
-        color: white; 
-        padding: 10px; 
-        font-size: 12px; 
-        z-index: 9999; 
-        max-width: 300px; 
-        max-height: 200px; 
-        overflow-y: auto;
-      `;
-      document.body.appendChild(div);
-      return div;
-    })();
-    
-    debugDiv.innerHTML = `${timestamp}: ${message}<br>` + debugDiv.innerHTML;
-  }
-};
-
 // Utility to detect mobile devices
 const isMobileDevice = () => {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -59,7 +28,7 @@ const isMobileDevice = () => {
 // Utility to detect tablet devices
 const isTabletDevice = () => {
   return /iPad|Android(?=.*Tablet)|Tablet/i.test(navigator.userAgent) || 
-         (window.innerWidth >= 768 && window.innerWidth <= 1366); // Extended range for iPad Pro
+         (window.innerWidth >= 768 && window.innerWidth <= 1366);
 };
 
 const QRCodeScanner: React.FC = () => {
@@ -88,7 +57,6 @@ const QRCodeScanner: React.FC = () => {
 
   useEffect(() => {
     mountedRef.current = true;
-    debugLog('Component mounted', { isMobile: isMobileDevice() });
     
     // Prevent scrolling and zooming on iOS devices
     const preventScrolling = (e: TouchEvent) => {
@@ -132,7 +100,6 @@ const QRCodeScanner: React.FC = () => {
     
     return () => {
       mountedRef.current = false;
-      debugLog('Component unmounting, clearing intervals');
       
       // Clean up intervals and timeouts
       if (scanningInterval.current) {
@@ -162,45 +129,55 @@ const QRCodeScanner: React.FC = () => {
     };
   }, []);
 
+  // Unified scan area configuration
+  const getScanAreaConfig = useCallback(() => {
+    const isMobile = isMobileDevice();
+    const isTablet = isTabletDevice();
+    
+    // Use consistent multiplier for BOTH visual and processing
+    let scanAreaMultiplier;
+    if (isTablet) {
+      scanAreaMultiplier = 0.5; // 50% for tablets
+    } else if (isMobile) {
+      scanAreaMultiplier = 0.6; // 60% for phones  
+    } else {
+      scanAreaMultiplier = 0.4; // 40% for desktop
+    }
+    
+    return {
+      multiplier: scanAreaMultiplier,
+      // Convert to viewport percentage for consistent visual display
+      viewportPercentage: `${scanAreaMultiplier * 100}%`
+    };
+  }, []);
+
   // Toggle camera function
   const toggleCamera = useCallback(() => {
     const newFacingMode = facingMode === 'environment' ? 'user' : 'environment';
     setFacingMode(newFacingMode);
-    debugLog('Camera toggled', { from: facingMode, to: newFacingMode });
   }, [facingMode]);
 
   const processQRCode = useCallback(async (code: string) => {
     // Prevent multiple simultaneous processing
     if (isProcessingRef.current) {
-      debugLog('Already processing, skipping duplicate request');
       return;
     }
     
     isProcessingRef.current = true;
-    debugLog('Processing QR code', { code: code.substring(0, 20) + '...' });
-    
     setScanState(prev => ({ ...prev, isScanning: false, isProcessing: true }));
   
     try {
       const response: ServerResponse = await createByQRCode(code);
       
       if (!mountedRef.current) {
-        debugLog('Component unmounted during request, aborting');
         return;
       }
       
-      debugLog('Server response received', { 
-        status: response.status, 
-        message: response.message,
-        hasData: !!response.data 
-      });
-  
       let messageType: 'check-in' | 'check-out' | 'error' | null = null;
   
       if (response.status) {
         // Successful case
         messageType = response.data?.come_time ? 'check-in' : 'check-out';
-        debugLog('Success case', { messageType, employeeName: response.data?.full_name });
   
         setScanState(prev => ({
           ...prev,
@@ -215,7 +192,6 @@ const QRCodeScanner: React.FC = () => {
         });
       } else {
         // Error case
-        debugLog('Error case', { error: response.error });
         setScanState(prev => ({
           ...prev,
           serverMessage: response.error || '不明なエラー',
@@ -230,12 +206,9 @@ const QRCodeScanner: React.FC = () => {
       }
     } catch (error) {
       // Network error handling
-      const errorMessage = (error instanceof Error && error.message) ? error.message : String(error);
-      debugLog('Network error occurred', { error: errorMessage });
       console.error('データ送信エラー:', error);
       
       if (!mountedRef.current) {
-        debugLog('Component unmounted during error handling');
         return;
       }
       
@@ -252,7 +225,6 @@ const QRCodeScanner: React.FC = () => {
       });
     } finally {
       isProcessingRef.current = false;
-      debugLog('Processing completed, resetting state');
       
       if (mountedRef.current) {
         setScanState(prev => ({ ...prev, isProcessing: false }));
@@ -269,27 +241,18 @@ const QRCodeScanner: React.FC = () => {
   
   const capture = useCallback(() => {
     if (!mountedRef.current) {
-      debugLog('Component unmounted, skipping capture');
       return;
     }
     
     if (isProcessingRef.current || !scanState.isScanning || !webcamRef.current) {
-      debugLog('Skipping capture', { 
-        processing: isProcessingRef.current,
-        scanning: scanState.isScanning,
-        webcamReady: !!webcamRef.current 
-      });
       return;
     }
 
     try {
       const imageSrc = webcamRef.current.getScreenshot();
       if (!imageSrc) {
-        debugLog('No image captured from webcam');
         return;
       }
-
-      debugLog('Image captured, processing...');
       
       const image = new Image();
       image.onload = () => {
@@ -298,18 +261,9 @@ const QRCodeScanner: React.FC = () => {
           const sourceWidth = image.width;
           const sourceHeight = image.height;
           
-          debugLog('Image loaded', { width: sourceWidth, height: sourceHeight });
-          
-          // Increased scan area for different devices
-          const isMobile = isMobileDevice();
-          const isTablet = isTabletDevice();
-          let scanAreaMultiplier = 0.4; // Default for desktop
-          
-          if (isTablet) {
-            scanAreaMultiplier = 0.5; // 50% for tablets
-          } else if (isMobile) {
-            scanAreaMultiplier = 0.6; // 60% for phones
-          }
+          // Use the SAME multiplier as visual display
+          const config = getScanAreaConfig();
+          const scanAreaMultiplier = config.multiplier;
           
           const scanAreaSize = Math.min(sourceWidth, sourceHeight) * scanAreaMultiplier;
           const startX = (sourceWidth - scanAreaSize) / 2;
@@ -320,11 +274,10 @@ const QRCodeScanner: React.FC = () => {
           
           const ctx = canvas.getContext('2d');
           if (!ctx) {
-            debugLog('Failed to get canvas context');
             return;
           }
           
-          // Minimal processing for maximum speed
+          // Process exactly the same area that user sees in the frame
           ctx.drawImage(
             image,
             startX, startY, scanAreaSize, scanAreaSize,
@@ -335,32 +288,26 @@ const QRCodeScanner: React.FC = () => {
           const code = jsQR(imageData.data, imageData.width, imageData.height);
           
           if (code) {
-            debugLog('QR code detected', { data: code.data.substring(0, 20) + '...' });
             processQRCode(code.data);
-          } else {
-            // Only log occasionally to avoid spam
-            if (Math.random() < 0.01) { // 1% chance to log
-              debugLog('No QR code detected in frame');
-            }
           }
           
-          // Clean up canvas to prevent memory leaks in Safari
+          // Clean up canvas to prevent memory leaks
           canvas.width = 0;
           canvas.height = 0;
         } catch (error) {
-          debugLog('Error processing image', { error: error instanceof Error ? error.message : String(error) });
+          console.error('画像処理エラー:', error);
         }
       };
       
       image.onerror = () => {
-        debugLog('Failed to load captured image');
+        console.error('画像読み込みエラー');
       };
       
       image.src = imageSrc;
     } catch (error) {
-      debugLog('Error during capture', { error: error instanceof Error ? error.message : String(error) });
+      console.error('画像キャプチャエラー:', error);
     }
-  }, [scanState.isProcessing, scanState.isScanning, processQRCode]);
+  }, [scanState.isProcessing, scanState.isScanning, processQRCode, getScanAreaConfig]);
 
   useEffect(() => {
     // Clear any existing intervals/timeouts
@@ -374,25 +321,21 @@ const QRCodeScanner: React.FC = () => {
     }
 
     if (scanState.isScanning) {
-      debugLog('Starting scanning interval');
       scanningInterval.current = setInterval(() => {
         if (mountedRef.current) {
           capture();
         }
-      }, 200); // Slightly slower for Safari stability
+      }, 200);
       
       return () => {
-        debugLog('Cleaning up scanning interval');
         if (scanningInterval.current) {
           clearInterval(scanningInterval.current);
           scanningInterval.current = undefined;
         }
       };
     } else {
-      debugLog('Setting reset timeout');
       resetTimeout.current = setTimeout(() => {
         if (mountedRef.current) {
-          debugLog('Resetting scanner state');
           isProcessingRef.current = false; // Reset processing flag
           setScanState(prev => ({
             ...prev,
@@ -406,7 +349,6 @@ const QRCodeScanner: React.FC = () => {
       }, 3000);
       
       return () => {
-        debugLog('Cleaning up reset timeout');
         if (resetTimeout.current) {
           clearTimeout(resetTimeout.current);
           resetTimeout.current = undefined;
@@ -429,25 +371,20 @@ const QRCodeScanner: React.FC = () => {
 
   // Dynamic scan area size based on device type
   const scanAreaSize = useMemo(() => {
-    const isMobile = isMobileDevice();
-    const isTablet = isTabletDevice();
-    
-    if (isTablet) {
-      return '45%'; // Medium size for tablets
-    } else if (isMobile) {
-      return '60%'; // Larger for phones
-    } else {
-      return '35%'; // Smaller for desktop
-    }
-  }, []);
+    const config = getScanAreaConfig();
+    return config.viewportPercentage;
+  }, [getScanAreaConfig]);
 
   const scannerStyles = useMemo(() => ({
     container: {
       height: '100vh',
       width: '100vw',
-      position: 'relative' as const,
+      position: 'fixed' as const,
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
       overflow: 'hidden',
-      // Aggressive scroll prevention for iOS
       touchAction: 'none',
       userSelect: 'none',
       WebkitUserSelect: 'none',
@@ -455,11 +392,12 @@ const QRCodeScanner: React.FC = () => {
       msUserSelect: 'none',
       WebkitTouchCallout: 'none',
       WebkitTapHighlightColor: 'transparent',
-      // Prevent iOS safari UI changes
       WebkitOverflowScrolling: 'touch',
-      // Ensure full viewport usage
       minHeight: '100vh',
-      minWidth: '100vw'
+      minWidth: '100vw',
+      zIndex: 1000,
+      WebkitTransform: 'translate3d(0,0,0)',
+      transform: 'translate3d(0,0,0)'
     },
     webcam: {
       width: '100%',
@@ -471,7 +409,7 @@ const QRCodeScanner: React.FC = () => {
       top: '50%',
       left: '50%',
       transform: 'translate(-50%, -50%)',
-      width: scanAreaSize, // Dynamic size based on device
+      width: scanAreaSize,
       aspectRatio: '1 / 1',
       border: '2px solid rgba(255, 255, 255, 0.8)',
       boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.7)',
@@ -481,7 +419,7 @@ const QRCodeScanner: React.FC = () => {
       position: 'absolute' as const,
       top: -2,
       left: -2,
-      width: '25px', // Slightly larger corners for better visibility
+      width: '25px',
       height: '25px',
       borderTop: '4px solid #64B5F6', 
       borderLeft: '4px solid #64B5F6'
@@ -529,10 +467,9 @@ const QRCodeScanner: React.FC = () => {
       color: 'white',
       textAlign: 'center' as const,
       zIndex: 2,
-      width: '90%', // Increased width for mobile
+      width: '90%',
       textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)'
     },
-    // Camera toggle button styles
     cameraToggle: {
       position: 'absolute' as const,
       top: '20px',
@@ -543,6 +480,21 @@ const QRCodeScanner: React.FC = () => {
       '&:hover': {
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
       }
+    },
+    processingOverlay: {
+      position: 'absolute' as const,
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      width: scanAreaSize,
+      aspectRatio: '1 / 1',
+      border: '3px solid #4CAF50',
+      borderRadius: '8px',
+      backgroundColor: 'rgba(76, 175, 80, 0.1)',
+      zIndex: 2,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
     }
   }), [scanAreaSize]);
 
@@ -565,68 +517,21 @@ const QRCodeScanner: React.FC = () => {
     `;
   }, []);
 
-  // Safari debugging info component
-  const DebugInfo = useCallback(() => {
-    if (!window.location.search.includes('debug=true')) return null;
+  // QR detected feedback overlay
+  const QRDetectedOverlay = useMemo(() => {
+    if (!scanState.isProcessing) return null;
     
     return (
-      <Box sx={{
-        position: 'fixed',
-        top: 10,
-        right: 10,
-        background: 'rgba(0,0,0,0.8)',
-        color: 'white',
-        padding: 2,
-        borderRadius: 1,
-        fontSize: '12px',
-        zIndex: 9999,
-        maxWidth: '250px'
-      }}>
-        <Typography variant="caption" display="block">
-          Safari Debug Info:
-        </Typography>
-        <Typography variant="caption" display="block">
-          Scanning: {scanState.isScanning ? 'Yes' : 'No'}
-        </Typography>
-        <Typography variant="caption" display="block">
-          Processing: {scanState.isProcessing ? 'Yes' : 'No'}
-        </Typography>
-        <Typography variant="caption" display="block">
-          Webcam Ready: {webcamRef.current ? 'Yes' : 'No'}
-        </Typography>
-        <Typography variant="caption" display="block">
-          Mobile Device: {isMobileDevice() ? 'Yes' : 'No'}
-        </Typography>
-        <Typography variant="caption" display="block">
-          Tablet Device: {isTabletDevice() ? 'Yes' : 'No'}
-        </Typography>
-        <Typography variant="caption" display="block">
-          Camera: {facingMode === 'environment' ? 'Back' : 'Front'}
-        </Typography>
-        <Typography variant="caption" display="block">
-          Scan Area: {scanAreaSize}
-        </Typography>
-        <Typography variant="caption" display="block">
-          User Agent: {navigator.userAgent.includes('Safari') ? 'Safari' : 'Other'}
+      <Box sx={scannerStyles.processingOverlay}>
+        <Typography variant="h6" sx={{ color: 'white', textShadow: '0 1px 2px rgba(0, 0, 0, 0.8)' }}>
+          QRコードが検出されました！
         </Typography>
       </Box>
     );
-  }, [scanState.isScanning, scanState.isProcessing, scanAreaSize, facingMode]);
+  }, [scanState.isProcessing, scannerStyles.processingOverlay]);
 
   return (
-    <Box sx={{
-      ...scannerStyles.container,
-      // Force fixed positioning for iPad
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 1000,
-      // Additional iOS specific fixes
-      WebkitTransform: 'translate3d(0,0,0)', // Force hardware acceleration
-      transform: 'translate3d(0,0,0)'
-    }}>
+    <Box sx={scannerStyles.container}>
       {scanState.isScanning ? (
         <>
           <style>{ScanAnimation}</style>
@@ -636,9 +541,7 @@ const QRCodeScanner: React.FC = () => {
             screenshotFormat="image/jpeg"
             videoConstraints={videoConstraints}
             style={scannerStyles.webcam}
-            imageSmoothing={false} // Disable smoothing for better sharpness
-            onUserMedia={() => debugLog('Webcam stream started')}
-            onUserMediaError={(error) => debugLog('Webcam error', { error })}
+            imageSmoothing={false}
           />
           
           {/* Camera Toggle Button */}
@@ -652,6 +555,7 @@ const QRCodeScanner: React.FC = () => {
             </IconButton>
           </Tooltip>
           
+          {/* Main scan overlay */}
           <Box sx={scannerStyles.overlay}>
             <Box sx={scannerStyles.cornerTopLeft} />
             <Box sx={scannerStyles.cornerTopRight} />
@@ -660,19 +564,20 @@ const QRCodeScanner: React.FC = () => {
             <Box sx={scannerStyles.scanLine} />
           </Box>
           
+          {/* QR Detected feedback overlay */}
+          {QRDetectedOverlay}
+          
           <Box sx={scannerStyles.instruction}>
             <Typography variant="h6" sx={{ marginBottom: 1 }}>
               QRコードを枠内に合わせてください
             </Typography>
             <Typography variant="body1" sx={{ marginBottom: 1 }}>
-               デバイスを20cm以上離してください
+              デバイスを20-30cm離してください
             </Typography>
             <Typography variant="body1">
               コードが鮮明に見えるように調整してください
             </Typography>
           </Box>
-          
-          <DebugInfo />
         </>
       ) : (
         <ResultDisplay
