@@ -1,316 +1,223 @@
-# Employee Attendance Management System
+# Attendance Management System - Frontend
 
-A comprehensive web-based attendance tracking system built with React and TypeScript. This system allows companies to manage employee attendance through QR codes, geolocation, and manual check-ins, with real-time dashboards and detailed reporting.
+A comprehensive React-based attendance management system with role-based access control, QR code scanning, and real-time dashboard capabilities.
 
-## 🌟 Features
+## 🚀 Features
 
-### For Employees
-- **QR Code Check-in/Check-out**: Scan QR codes to mark attendance
-- **Geolocation-based Attendance**: Check-in using location within company radius
-- **Personal Dashboard**: View daily attendance, weekly timesheets, and statistics
-- **Mobile-responsive Design**: Works seamlessly on smartphones and tablets
-- **Multi-language Support**: Japanese and English interface
+### Multi-Role Authentication
+- **Admin Dashboard**: Complete system management and analytics
+- **Employee Portal**: Personal attendance tracking and timesheet management
+- **QR Code Scanner**: Dedicated QR scanning interface for attendance tracking
+- **Dashboard Display**: Large screen display for office attendance overview
+- **Google OAuth Integration**: Seamless authentication with Google accounts
 
-### For Administrators
-- **Real-time Attendance Dashboard**: Live updates of employee attendance status
-- **Employee Management**: Create, edit, delete employee records
-- **Department & Position Management**: Organize employees by departments and roles
-- **Excel Import/Export**: Bulk employee data management
-- **Interactive Charts**: Visual attendance statistics and trends
-- **Company Settings**: Configure work hours, location, colors, and attendance rules
-- **QR Code Generation**: Generate individual or bulk QR codes for employees
+## Key Components
 
-### Advanced Features
-- **Server-Sent Events (SSE)**: Real-time updates without page refresh
-- **Color Customization**: Customize interface colors for different attendance statuses
-- **Interactive Maps**: Set company location and attendance radius using Leaflet maps
-- **Comprehensive Filtering**: Advanced table filtering and search functionality
-- **Role-based Access Control**: Admin and Employee roles with different permissions
+#### 1. **New Department Table** (`NewDepartmentTable.tsx`)
+A large-screen optimized attendance display component designed for office dashboards:
+- Real-time attendance status updates via Server-Sent Events (SSE)
+- Responsive grid layout adapting to different screen sizes (1024px to 4K)
+- Department-based employee grouping with customizable display
+- Color-coded attendance status with configurable themes
+- Pagination support for large employee datasets
+- Department filtering and selection capabilities
+- **Usage**: Perfect for wall-mounted displays showing current office attendance
 
-## 🛠️ Technology Stack
+#### 2. **QR Code Scanner** (`QrCodeScanner.tsx`)
+High-performance QR code scanning interface:
+- Real-time camera feed with optimized scanning area
+- Fast QR code detection using jsQR library
+- Automatic attendance logging upon successful scan
+- Visual feedback with success/error animations
+- Support for both front and rear cameras
+- **Usage**: Stationed at office entrances for quick check-in/check-out
 
-### Frontend
-- **React 18** with TypeScript
-- **Material-UI (MUI)** for UI components
-- **MUI X Charts** for data visualization
-- **React Router** for navigation
-- **i18next** for internationalization
-- **Leaflet** for interactive maps
-- **Axios** for HTTP requests
-- **date-fns** for date manipulation
+#### 3. **Attendance Table** (`AttendanceTable.tsx`)
+Comprehensive attendance management interface:
+- Filterable and searchable employee records
+- Date range selection with calendar integration
+- Export functionality for attendance reports
+- Real-time status updates with color coding
+- Pagination and sorting capabilities
+- Multi-language support (Japanese/English)
+- **Usage**: Admin interface for detailed attendance management
 
-### Key Libraries
-- `jsqr` - QR code scanning
-- `react-webcam` - Camera access for QR scanning
-- `js-cookie` - Cookie management
-- `react-leaflet` - Map integration
+#### 4. **Employee Dashboard** (`MainContent.tsx`)
+Personal attendance portal for employees:
+- Real-time clock with current date display
+- Check-in/Check-out functionality with GPS validation
+- Personal timesheet with weekly/monthly views
+- Attendance statistics and summaries
+- Mobile-optimized responsive design
+- **Usage**: Employee self-service portal
 
-## 📋 Prerequisites
+#### 5. **Company Settings** (`CompanySettingsPage.tsx`)
+Administrative configuration interface:
+- Company location settings with interactive map
+- Working hours and overtime configuration
+- Color theme customization for attendance status
+- Logo and company information management
+- Attendance rules and late time thresholds
+- **Usage**: System configuration by administrators
 
-Before you begin, ensure you have the following installed:
-- **Node.js** (version 16.0 or higher)
-- **npm** or **yarn** package manager
-- **Modern web browser** (Chrome, Firefox, Safari, Edge)
-- **Backend API server** (not included in this repository)
+## 🛠 Technology Stack
 
-## 🚀 Installation
+- **Framework**: React 18 with TypeScript
+- **UI Library**: Material-UI (MUI) v5
+- **State Management**: React Hooks (useState, useEffect, useContext)
+- **Routing**: React Router v6
+- **HTTP Client**: Axios with interceptors
+- **Internationalization**: react-i18next
+- **Date Handling**: date-fns
+- **QR Code**: jsQR library
+- **Charts**: Recharts & MUI X Charts
+- **Maps**: Leaflet with OpenStreetMap
+- **Camera**: react-webcam
+- **File Handling**: PapaParse (CSV), SheetJS (Excel)
 
-### 1. Clone the Repository
-```bash
-git clone <repository-url>
-cd attendance-management-system
+## 📁 Project Structure
+
+```
+src/
+├── admin/                          # Admin-specific components
+│   ├── components/
+│   │   ├── Table/
+│   │   │   ├── NewDepartmentTable.tsx    # Large screen attendance display
+│   │   │   ├── AttendanceTable.tsx       # Standard attendance table
+│   │   │   ├── EmployeeTable.tsx         # Employee management table
+│   │   │   └── ...
+│   │   ├── DepartmentDialog.tsx          # Department management modal
+│   │   ├── ColorPicker.tsx               # Theme customization component
+│   │   └── MapComponent.tsx              # Interactive location picker
+│   └── pages/
+│       ├── AdminDashboard.tsx            # Main admin interface
+│       ├── CompanySettingsPage.tsx       # System configuration
+│       └── DepartmentPositionManagement.tsx
+├── client/                         # Employee/Client components
+│   ├── components/
+│   │   ├── Header.tsx                    # Navigation header
+│   │   ├── MainContent.tsx               # Employee dashboard
+│   │   ├── AttendanceSummary.tsx         # Personal attendance stats
+│   │   ├── WeeklyTimesheet.tsx           # Weekly attendance view
+│   │   └── TabsComponent.tsx             # Tab navigation
+│   └── pages/
+│       ├── LoginPage.tsx                 # Authentication interface
+│       ├── DashboardPage.tsx             # Employee main page
+│       ├── QrCodeScanner.tsx             # QR scanning interface
+│       └── BigTable.tsx                  # Large screen display page
+├── shared/                         # Shared utilities
+│   ├── protection/
+│   │   └── ProtectedRoute.tsx            # Route authentication
+│   └── styles/
+│       └── App.css                       # Global styles
+└── utils/
+    └── libs/
+        └── axios.ts                      # API configuration & interceptors
 ```
 
-### 2. Install Dependencies
-```bash
-npm install
-# or
-yarn install
-```
+## 🎨 Key Features by User Role
 
-### 3. Environment Configuration
-Create a `.env` file in the root directory:
+### **Admin Users**
+- Complete dashboard with attendance analytics
+- Employee management (CRUD operations)
+- Department and position management
+- Excel import/export functionality
+- QR code generation for employees
+- Company settings configuration
+- Real-time attendance monitoring
 
-```env
-# API Configuration
-REACT_APP_BASE_URL=http://localhost:8000/api
-REACT_APP_API_BASE_URL=http://localhost:8000
+### **Regular Employees**
+- Personal check-in/check-out interface
+- Attendance history and statistics
+- Weekly/monthly timesheet views
+- QR code download for personal use
+- Multi-language interface
 
-# Google OAuth (optional)
-REACT_APP_GOOGLE_CLIENT_ID=your_google_client_id_here
+### **QR Scanner Role**
+- Dedicated QR scanning interface
+- Optimized for tablet/mobile devices
+- Real-time attendance processing
+- Visual feedback for scan results
 
-# Other configurations
-GENERATE_SOURCEMAP=false
-```
+### **Dashboard Display Role**
+- Large screen attendance overview
+- Real-time updates via SSE
+- Department-based grouping
+- Color-coded status indicators
+- Responsive scaling for different screen sizes
 
-### 4. Start Development Server
-```bash
-npm start
-# or
-yarn start
-```
+## 🌐 Internationalization
 
-The application will open at `http://localhost:3000`
+The application supports multiple languages:
+- **Japanese (ja)**: Primary language
+- **English (en)**: Secondary language
 
-## 🔧 Configuration
-
-### API Integration
-The system expects a REST API backend. Key endpoints include:
-
-```typescript
-// Authentication
-POST /sign-in
-POST /refresh-token
-
-// User Management
-GET /user/list
-POST /user/create
-PUT /user/{id}
-DELETE /user/{id}
-
-// Attendance
-GET /attendance/list
-POST /attendance/createbyqrcode
-POST /attendance/createbyphone
-
-// Company Settings
-GET /company_info/list
-PUT /company_info/{id}
-
-// Departments & Positions
-GET /department/list
-POST /department/create
-GET /position/list
-POST /position/create
-```
-
-### Geolocation Settings
-Configure company location and attendance radius in the admin panel:
-1. Go to **Company Settings**
-2. Set **Company Coordinates** (latitude, longitude)
-3. Define **Attendance Radius** in meters
-4. Save settings
-
-## 📱 Usage Guide
-
-### For Employees
-
-#### 1. Login
-- Access the application at your company's URL
-- Enter your employee ID and password
-- Or use Google OAuth if configured
-
-#### 2. Check-in/Check-out Options
-
-**QR Code Method:**
-- Navigate to QR Scanner
-- Scan your personal QR code
-- System will automatically record attendance
-
-**Manual Method:**
-- Click "Come" button on dashboard
-- Allow location access when prompted
-- System verifies you're within company radius
-
-#### 3. View Attendance
-- Dashboard shows today's check-in/out times
-- **Attendance Summary** tab displays monthly statistics
-- **Weekly Timesheet** shows detailed daily records
-
-### For Administrators
-
-#### 1. Access Admin Panel
-- Login with admin credentials
-- Navigate to admin dashboard
-
-#### 2. Employee Management
-- **Create Employees**: Add individual employees or upload Excel files
-- **Edit Information**: Update employee details, departments, positions
-- **Generate QR Codes**: Create QR codes for attendance tracking
-
-#### 3. Monitor Attendance
-- **Real-time Dashboard**: View live attendance status
-- **Attendance Table**: Filter and search attendance records
-- **Charts & Analytics**: Analyze attendance trends and patterns
-
-#### 4. System Configuration
-- **Company Settings**: Configure work hours, location, colors
-- **Departments & Positions**: Organize company structure
-- **Color Customization**: Customize interface appearance
-
-## 🎨 Customization
-
-### Color Themes
-Administrators can customize colors for different attendance statuses:
-- Present/Absent indicators
-- Time-based color coding
-- Table highlighting
-- Chart colors
-
-### Language Support
-The system supports:
-- Japanese (日本語) - Default
-- English
-
-Add new languages by extending the i18n configuration in `src/i18n.ts`.
-
-## 📊 Data Management
-
-### Excel Import/Export
-**Import Employees:**
-1. Download sample Excel template
-2. Fill employee information
-3. Upload via admin panel
-4. System validates and imports data
-
-**Export Data:**
-- Employee lists
-- Attendance records
-- QR codes (PDF format)
-
-### Data Validation
-The system includes comprehensive validation for:
-- Employee ID uniqueness
-- Email format validation
-- Required field validation
-- Department/Position relationships
+Language switching is available through the UI, with automatic locale detection and persistence.
 
 ## 🔐 Security Features
 
-- **JWT Authentication** with automatic token refresh
-- **Role-based Access Control** (Admin/Employee)
-- **Route Protection** prevents unauthorized access
-- **Input Validation** on all forms
-- **Secure Cookie Handling** for session management
+- JWT token-based authentication
+- Automatic token refresh
+- Role-based access control
 
-## 🚀 Deployment
+## 📊 Real-time Features
 
-### Production Build
+The application uses Server-Sent Events (SSE) for real-time updates:
+- Live attendance status changes
+- Real-time employee count updates
+- Instant dashboard refreshes
+- Color theme updates
+
+## 🔧 Customization
+
+### Color Themes
+Administrators can customize attendance status colors through the settings interface:
+- Present/Absent status colors
+- Check-in/Check-out time colors
+- Warning and error state colors
+
+### Display Settings
+- Toggle bold text for better visibility on large screens
+- Configurable department display names
+- Adjustable grid layouts for different screen sizes
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v16 or higher)
+- npm or yarn package manager
+
+### Installation
+
+1. Clone the repository
 ```bash
-npm run build
-# or
-yarn build
+git clone <repository-url>
+cd attendance-frontend
 ```
 
-### Environment Variables for Production
+2. Install dependencies
+```bash
+npm install
+```
+
+3. Configure environment variables
+```bash
+cp .env.example .env
+```
+
+4. Start the development server
+```bash
+npm start
+```
+
+The application will be available at `http://localhost:3000`
+
+### Environment Variables
+
 ```env
-REACT_APP_BASE_URL=https://your-api-domain.com/api
-GENERATE_SOURCEMAP=false
+REACT_APP_BASE_URL=http://localhost:8000
+REACT_APP_API_BASE_URL=http://localhost:8000
+REACT_APP_GOOGLE_CLIENT_ID=your_google_client_id
 ```
-
-### Deployment Options
-- **Static Hosting**: Netlify, Vercel, GitHub Pages
-- **Web Servers**: Nginx, Apache
-- **Cloud Platforms**: AWS S3, Google Cloud Storage
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-**1. QR Code Scanner Not Working**
-- Ensure HTTPS connection (required for camera access)
-- Check browser permissions for camera
-- Verify lighting conditions for QR code visibility
-
-**2. Geolocation Issues**
-- Enable location services in browser
-- Check company radius settings
-- Ensure GPS accuracy on mobile devices
-
-**3. Login Problems**
-- Verify API endpoint configuration
-- Check network connectivity
-- Clear browser cache and cookies
-
-**4. Real-time Updates Not Working**
-- Check Server-Sent Events (SSE) support
-- Verify WebSocket connections
-- Check firewall settings
-
-### Browser Compatibility
-- **Chrome**: Fully supported
-- **Firefox**: Fully supported
-- **Safari**: Supported (iOS 12+)
-- **Edge**: Supported
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 🆘 Support
-
-For support and questions:
-1. Check the troubleshooting section above
-2. Review the project documentation
-3. Create an issue in the repository
-4. Contact your system administrator
-
-## 📈 Roadmap
-
-Future enhancements may include:
-- Mobile application (React Native)
-- Biometric authentication
-- Advanced reporting features
-- Integration with HR systems
-- Multi-company support
-- Shift scheduling
-- Overtime calculations
 
 ---
-
-## Quick Start Checklist
-
-- [ ] Node.js installed (v16+)
-- [ ] Repository cloned
-- [ ] Dependencies installed (`npm install`)
-- [ ] Environment file configured (`.env`)
-- [ ] Backend API running
-- [ ] Development server started (`npm start`)
-- [ ] Admin account created
-- [ ] Company settings configured
-- [ ] Test employee created
-- [ ] QR codes generated
