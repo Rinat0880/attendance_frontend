@@ -25,6 +25,11 @@ const isMobileDevice = () => {
   return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 };
 
+// Utility to detect iPhone specifically
+const isIPhoneDevice = () => {
+  return /iPhone/i.test(navigator.userAgent);
+};
+
 // Utility to detect tablet devices
 const isTabletDevice = () => {
   return /iPad|Android(?=.*Tablet)|Tablet/i.test(navigator.userAgent) || 
@@ -129,17 +134,20 @@ const QRCodeScanner: React.FC = () => {
     };
   }, []);
 
-  // Unified scan area configuration
+  // Unified scan area configuration with larger size for iPhone
   const getScanAreaConfig = useCallback(() => {
-    const isMobile = isMobileDevice();
+    const isIPhone = isIPhoneDevice();
     const isTablet = isTabletDevice();
+    const isMobile = isMobileDevice();
     
     // Use consistent multiplier for BOTH visual and processing
     let scanAreaMultiplier;
-    if (isTablet) {
+    if (isIPhone) {
+      scanAreaMultiplier = 0.75; // 75% for iPhone - significantly larger
+    } else if (isTablet) {
       scanAreaMultiplier = 0.5; // 50% for tablets
     } else if (isMobile) {
-      scanAreaMultiplier = 0.6; // 60% for phones  
+      scanAreaMultiplier = 0.6; // 60% for other phones  
     } else {
       scanAreaMultiplier = 0.4; // 40% for desktop
     }
