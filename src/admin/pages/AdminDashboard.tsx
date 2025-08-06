@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../../shared/styles/App.css";
 import DashboardContent from "./AdminDashboardContent.tsx";
-import { Grid, Box, Button, Select, MenuItem, SelectChangeEvent } from "@mui/material";
+import { Grid, Box, IconButton, Select, MenuItem, SelectChangeEvent, Menu, MenuItem as MuiMenuItem } from "@mui/material";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import DepartmentPositionManagement from "./DepartmentPositionManagement.tsx";
 import EmployeeListPage from "./EmployeeListPage.tsx";
@@ -10,6 +10,10 @@ import NewTablePage from "./NewTablePage.tsx";
 import SideMenu from "../components/SideMenu.tsx";
 import { useTranslation } from "react-i18next";
 import { fetchCompanySettings } from '../../utils/libs/axios.ts';
+import MenuIcon from '@mui/icons-material/Menu';
+import PersonIcon from '@mui/icons-material/Person';
+import LogoutIcon from '@mui/icons-material/Logout';
+import LanguageIcon from '@mui/icons-material/Language';
 
 interface AdminDashboardProps {
   onLogout: () => void;
@@ -20,6 +24,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const { t, i18n } = useTranslation(['admin', 'common']);
   const [language, setLanguage] = useState(i18n.language);
   const [companyName, setCompanyName] = useState<string>("");
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   useEffect(() => {
     const getCompanyInfo = async () => {
@@ -35,6 +40,7 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
   }, []);
 
   const handleLogoutClick = () => {
+    handleMenuClose();
     onLogout();
     navigate("/login");
   };
@@ -44,6 +50,19 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
     i18n.changeLanguage(newLanguage);
     setLanguage(newLanguage);
     localStorage.setItem('lang', newLanguage);
+  };
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleGoToEmployee = () => {
+    handleMenuClose();
+    navigate("/employee");
   };
 
   return (
@@ -83,19 +102,83 @@ function AdminDashboard({ onLogout }: AdminDashboardProps) {
               <MenuItem value="ja">{t('common:japanese')}</MenuItem>
               <MenuItem value="en">{t('common:english')}</MenuItem>
             </Select>
-            <Button
-              variant="contained"
+
+            {/* Hamburger Menu */}
+            <IconButton
+              onClick={handleMenuOpen}
               sx={{
                 backgroundColor: "#105E82",
-                ":hover": { backgroundColor: "#919191", color: "black" },
-                height: "40px"
+                color: "white",
+                height: "40px",
+                width: "40px",
+                "&:hover": { 
+                  backgroundColor: "#0D4D6B" 
+                }
               }}
-              onClick={handleLogoutClick}
             >
-              ログアウト
-            </Button>
+              <MenuIcon />
+            </IconButton>
+
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'right',
+              }}
+              transformOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              PaperProps={{
+                sx: {
+                  mt: 1,
+                  minWidth: 200,
+                  borderRadius: 2,
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                }
+              }}
+            >
+              <MuiMenuItem onClick={handleGoToEmployee}>
+                <PersonIcon sx={{ mr: 2, color: "#105E82" }} />
+                個人ダッシュボード
+              </MuiMenuItem>
+              
+              <MuiMenuItem>
+                <LanguageIcon sx={{ mr: 2, color: "#105E82" }} />
+                <Select
+                  value={language}
+                  onChange={(e) => {
+                    handleLanguageChange(e);
+                    handleMenuClose();
+                  }}
+                  variant="standard"
+                  disableUnderline
+                  sx={{
+                    fontSize: "inherit",
+                    "& .MuiSelect-select": {
+                      padding: 0,
+                      border: "none",
+                      "&:focus": {
+                        backgroundColor: "transparent"
+                      }
+                    }
+                  }}
+                >
+                  <MenuItem value="ja">{t('common:japanese')}</MenuItem>
+                  <MenuItem value="en">{t('common:english')}</MenuItem>
+                </Select>
+              </MuiMenuItem>
+
+              <MuiMenuItem onClick={handleLogoutClick}>
+                <LogoutIcon sx={{ mr: 2, color: "#d32f2f" }} />
+                ログアウト
+              </MuiMenuItem>
+            </Menu>
           </Box>
         </Box>
+        
         <Box sx={{ flex: 1, padding: "20px" }}>
           <Grid container spacing={3}>
             <Grid item xs={12}>

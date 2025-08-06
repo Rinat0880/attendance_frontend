@@ -17,7 +17,7 @@ import {
   Tooltip,
 } from "@mui/material";
 import { setupDashboardSSE } from "../../../utils/libs/axios.ts";
-import Cookies from "js-cookie"; //
+import Cookies from "js-cookie";
 import {
   StyledTableCell,
   EmployeeCell,
@@ -56,7 +56,15 @@ interface Colors {
   new_present_color: string;
 }
 
-const NewDepartmentTable: React.FC = () => {
+interface NewDepartmentTableProps {
+  mode?: 'admin' | 'employee'; // Add mode prop
+  onControlsHover?: (isHovered: boolean) => void; // Callback for hover state
+}
+
+const NewDepartmentTable: React.FC<NewDepartmentTableProps> = ({ 
+  mode = 'admin',
+  onControlsHover 
+}) => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [departmentData, setDepartmentData] = useState<DepartmentData[]>([]);
   const [selectedDepartments, setSelectedDepartments] = useState<Set<string>>(
@@ -69,7 +77,8 @@ const NewDepartmentTable: React.FC = () => {
     new_absent_color: "#e53935",
     new_present_color: "#fafafa",
   });
-  const [isBold, setIsBold] = useState<boolean>(false); // Add state for bold text
+  const [isBold, setIsBold] = useState<boolean>(false);
+  const [showControls, setShowControls] = useState<boolean>(false);
 
   const maxColumnsPerPage = 10;
   const maxEmployeesPerColumn = 20;
@@ -180,7 +189,6 @@ const NewDepartmentTable: React.FC = () => {
     const allDepts = departmentData.map((dept) => dept.department_name);
     setSelectedDepartments(new Set(allDepts));
     Cookies.set('selectedDepartments', JSON.stringify(allDepts), { expires: 30 });
-    console.log(isBold);
     setCurrentPage(1);
   };
 
@@ -251,6 +259,14 @@ const NewDepartmentTable: React.FC = () => {
   const handleOpenModal = () => setModalOpen(true);
   const handleCloseModal = () => setModalOpen(false);
 
+  // Handle controls hover for employee mode
+  const handleControlsHover = (isHovered: boolean) => {
+    setShowControls(isHovered);
+    if (onControlsHover) {
+      onControlsHover(isHovered);
+    }
+  };
+
   const renderTableContent = () => {
     const columnWidth = `${100 / maxColumnsPerPage}%`;
     const currentData = pages[currentPage - 1] || [];
@@ -263,7 +279,7 @@ const NewDepartmentTable: React.FC = () => {
 
           return (
             <StyledTableCell
-              key={`<span class="math-inline">${colIndex}-</span>${rowIndex}`}
+              key={`${colIndex}-${rowIndex}`}
               sx={{ width: columnWidth }}
             >
               {employee && employee.employee_id !== null ? (
@@ -287,58 +303,186 @@ const NewDepartmentTable: React.FC = () => {
   if (loading) return <div>読み込み中...</div>;
   if (error) return <div>{error}</div>;
 
-  return (
-    <div>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          margin: "0 21px 0 21px",
-          height: "38px",
-          mb: 2,
-        }}
-      >
-        <Button
-          variant="contained"
-          onClick={handleOpenModal}
+  // Render controls based on mode
+  const renderControls = () => {
+    if (mode === 'admin') {
+      // Admin mode - show controls normally
+      return (
+        <Box
           sx={{
-            backgroundColor: "#105E82",
-            padding: "10px 15px ",
-            "&:hover": {
-              backgroundColor: "#0D4D6B",
-            },
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            margin: "0 21px 0 21px",
+            height: "38px",
+            mb: 2,
           }}
         >
-          部門を選択
-        </Button>
-        <PaginationContainer>
-          <StyledButtonGroup variant="outlined" size="small" aria-label="Small button group">
-            {" "}
-            <Button
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-            >
-              <NavigateBeforeIcon />
-            </Button>
-            <Button disabled sx={{ pointerEvents: "none" }}>
-              <PageIndicator>
-                {currentPage} / {Math.max(1, pages.length)}
-              </PageIndicator>
-            </Button>
-            <Button
-              onClick={() =>
-                setCurrentPage((prev) =>
-                  Math.min(Math.max(1, pages.length), prev + 1)
-                )
-              }
-              disabled={currentPage === Math.max(1, pages.length)}
-            >
-              <NavigateNextIcon />
-            </Button>
-          </StyledButtonGroup>
-        </PaginationContainer>
-      </Box>
+          <Button
+            variant="contained"
+            onClick={handleOpenModal}
+            sx={{
+              backgroundColor: "#105E82",
+              padding: "10px 15px",
+              "&:hover": {
+                backgroundColor: "#0D4D6B",
+              },
+            }}
+          >
+            部門を選択
+          </Button>
+          <PaginationContainer>
+            <StyledButtonGroup variant="outlined" size="small" aria-label="Small button group">
+              <Button
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+              >
+                <NavigateBeforeIcon />
+              </Button>
+              <Button disabled sx={{ pointerEvents: "none" }}>
+                <PageIndicator>
+                  {currentPage} / {Math.max(1, pages.length)}
+                </PageIndicator>
+              </Button>
+              <Button
+                onClick={() =>
+                  setCurrentPage((prev) =>
+                    Math.min(Math.max(1, pages.length), prev + 1)
+                  )
+                }
+                disabled={currentPage === Math.max(1, pages.length)}
+              >
+                <NavigateNextIcon />
+              </Button>
+            </StyledButtonGroup>
+          </PaginationContainer>
+        </Box>
+      );
+    } else {
+      // Employee mode - controls are handled by parent component
+      return null;
+    }
+  };
+
+  return (
+    <div style={{ position: 'relative', height: '100%' }}>
+      {/* Controls area for employee mode - centered at top */}
+      {mode === 'employee' && (
+        <Box
+          onMouseEnter={() => handleControlsHover(true)}
+          onMouseLeave={() => handleControlsHover(false)}
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1000,
+            padding: 2,
+            width: '500px',
+            height: '80px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'flex-start',
+          }}
+        >
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              backgroundColor: showControls ? 'rgba(255, 255, 255, 0.95)' : 'transparent',
+              borderRadius: 2,
+              padding: showControls ? '12px 24px' : 0,
+              boxShadow: showControls ? '0 4px 20px rgba(0,0,0,0.15)' : 'none',
+              transition: 'all 0.3s ease-in-out',
+              opacity: showControls ? 1 : 0,
+              transform: showControls ? 'translateY(0)' : 'translateY(-10px)',
+              border: showControls ? '1px solid rgba(16, 94, 130, 0.1)' : 'none',
+            }}
+          >
+            {showControls && (
+              <>
+                <Button
+                  variant="contained"
+                  onClick={handleOpenModal}
+                  sx={{
+                    backgroundColor: "#105E82",
+                    padding: "10px 20px",
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    "&:hover": {
+                      backgroundColor: "#0D4D6B",
+                    },
+                  }}
+                >
+                  部門を選択
+                </Button>
+                
+                <Box sx={{ 
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1,
+                  padding: '8px 16px',
+                  border: '2px solid #105E82',
+                  borderRadius: 2,
+                  fontSize: '14px',
+                  backgroundColor: 'white',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}>
+                  <Button
+                    onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    sx={{ 
+                      minWidth: 'auto', 
+                      padding: '4px 8px', 
+                      fontSize: '14px',
+                      color: '#105E82',
+                      '&:hover': {
+                        backgroundColor: 'rgba(16, 94, 130, 0.1)'
+                      }
+                    }}
+                  >
+                    ←
+                  </Button>
+                  <Typography sx={{ 
+                    fontSize: '14px', 
+                    minWidth: '40px', 
+                    textAlign: 'center',
+                    fontWeight: 500,
+                    color: '#105E82'
+                  }}>
+                    {currentPage}/{Math.max(1, pages.length)}
+                  </Typography>
+                  <Button
+                    onClick={() =>
+                      setCurrentPage((prev) =>
+                        Math.min(Math.max(1, pages.length), prev + 1)
+                      )
+                    }
+                    disabled={currentPage === Math.max(1, pages.length)}
+                    sx={{ 
+                      minWidth: 'auto', 
+                      padding: '4px 8px', 
+                      fontSize: '14px',
+                      color: '#105E82',
+                      '&:hover': {
+                        backgroundColor: 'rgba(16, 94, 130, 0.1)'
+                      }
+                    }}
+                  >
+                    →
+                  </Button>
+                </Box>
+              </>
+            )}
+          </Box>
+        </Box>
+      )}
+
+      {/* Regular controls for admin mode */}
+      {renderControls()}
+
+      {/* Filter Modal */}
       <Modal open={modalOpen} onClose={handleCloseModal}>
         <Box
           sx={{
@@ -407,40 +551,36 @@ const NewDepartmentTable: React.FC = () => {
           </Stack>
         </Box>
       </Modal>
+
+      {/* Table */}
       <TableContainer
         component={Paper}
         sx={{ borderRadius: 3, overflow: "hidden" }}
       >
         <Table>
-          {/* Внутри return JSX компонента */}
           <TableHead>
             <TableRow>
-              {/* Всегда рендерим maxColumnsPerPage ячеек заголовка */}
               {Array.from({ length: maxColumnsPerPage }, (_, index) => {
-                // Получаем чанк отдела для заголовка на текущей странице
                 const deptChunk = pages[currentPage - 1]?.[index];
-                // Рассчитываем ширину для единообразия
                 const columnWidth = `${100 / maxColumnsPerPage}%`;
 
                 return deptChunk ? (
-                  // Если есть данные отдела, показываем имя (с Tooltip)
                   <Tooltip
                     key={index}
-                    title={deptChunk.department_name} // Полное имя во всплывающей подсказке
+                    title={deptChunk.department_name}
                     arrow
-                    className="custom-tooltip" // Если есть стили
+                    className="custom-tooltip"
                   >
                     <StyledTableCell sx={{ width: columnWidth }}>
                       <strong>{formatDepartmentName(deptChunk)}</strong>
                     </StyledTableCell>
                   </Tooltip>
                 ) : (
-                  // Иначе, показываем пустую ячейку заголовка
                   <StyledTableCell
                     key={`empty-header-${index}`}
                     sx={{ width: columnWidth }}
                   >
-                    <strong>-</strong> {/* Плейсхолдер */}
+                    <strong>-</strong>
                   </StyledTableCell>
                 );
               })}

@@ -4,16 +4,20 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import LanguageIcon from '@mui/icons-material/Language';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import { styled } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import axiosInstance, { downloadEmployeeQRCodeByHimself } from '../../utils/libs/axios.ts';
 import { useNavigate } from 'react-router-dom';
+import { Employee } from '../../employees.tsx';
 
 interface HeaderProps {
   onLogout: () => void;
   anchorEl: null | HTMLElement;
   handleMenuOpen: (event: React.MouseEvent<HTMLElement>) => void;
   handleMenuClose: () => void;
+  employeeData?: Employee | null;
 }
 
 const CustomMenu = styled(Menu)(({ theme }) => ({
@@ -37,8 +41,7 @@ const CustomMenu = styled(Menu)(({ theme }) => ({
   },
 }));
 
-
-const Header: React.FC<HeaderProps> = ({ onLogout, anchorEl, handleMenuOpen, handleMenuClose }) => {
+const Header: React.FC<HeaderProps> = ({ onLogout, anchorEl, handleMenuOpen, handleMenuClose, employeeData }) => {
   const { t, i18n } = useTranslation();
   const [employeeName, setEmployeeName] = useState<string | null>(null);
   const [employeeId, setEmployeeId] = useState<string>('');
@@ -59,8 +62,13 @@ const Header: React.FC<HeaderProps> = ({ onLogout, anchorEl, handleMenuOpen, han
     handleLanguageMenuClose();
   };
 
-  const goToBigTable = () => {
-    navigate('/bigTable');
+  const goToBigDashboard = () => {
+    navigate('/employee');
+    handleMenuClose();
+  };
+
+  const goToAdminPanel = () => {
+    navigate('/admin');
     handleMenuClose();
   };
 
@@ -103,6 +111,9 @@ const Header: React.FC<HeaderProps> = ({ onLogout, anchorEl, handleMenuOpen, han
   useEffect(() => {
     fetchEmployeeName();
   }, []);
+
+  // Check if user is admin
+  const isAdmin = employeeData?.role === 'ADMIN';
 
   return (
     <Box sx={{
@@ -158,7 +169,19 @@ const Header: React.FC<HeaderProps> = ({ onLogout, anchorEl, handleMenuOpen, han
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         >
-          <MenuItem onClick={goToBigTable}>{t('goBigTable') || 'Dashboard View'}</MenuItem>
+          {/* Admin Panel option - only visible for admins */}
+          {isAdmin && (
+            <MenuItem onClick={goToAdminPanel}>
+              <AdminPanelSettingsIcon sx={{ mr: 1, color: '#105e82' }} />
+              管理パネル
+            </MenuItem>
+          )}
+          
+          <MenuItem onClick={goToBigDashboard}>
+            <DashboardIcon sx={{ mr: 1, color: '#105e82' }} />
+            出社表
+          </MenuItem>
+          
           <MenuItem onClick={handleDownloadQRCode}>{t('qrCode')}</MenuItem>
           <MenuItem onClick={handleLogoutClick}>{t('logout')}</MenuItem>
         </CustomMenu>

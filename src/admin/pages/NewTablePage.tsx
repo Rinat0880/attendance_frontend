@@ -4,7 +4,7 @@ import NewDepartmentTable from '../components/Table/NewDepartmentTable.tsx';
 const NewTablePage = () => {
   return (
     <div className="container">
-      <NewDepartmentTable/>
+      <NewDepartmentTable mode="admin" />
     </div>
   );
 };

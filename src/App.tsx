@@ -4,6 +4,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./client/pages/LoginPage.tsx";
 import DashboardPage from "./client/pages/DashboardPage.tsx";
+import PersonalDashboard from "./client/pages/PersonalDashboard.tsx";
 import AdminDashboard from "./admin/pages/AdminDashboard.tsx";
 import { Employee } from "./employees";
 import { Box } from "@mui/material";
@@ -83,10 +84,21 @@ function App() {
 
             {/* Защищенные маршруты с проверкой авторизации */}
             <Route element={<ProtectedRoute />}>
+              {/* Main dashboard - now shows big table */}
               <Route
                 path="/employee"
                 element={
                   <DashboardPage
+                    employeeData={employeeData!}
+                    onLogout={handleLogout}
+                  />
+                }
+              />
+              {/* Personal dashboard with tabs */}
+              <Route
+                path="/employee/personal"
+                element={
+                  <PersonalDashboard
                     employeeData={employeeData!}
                     onLogout={handleLogout}
                   />

@@ -1,36 +1,28 @@
 import React, { useState } from 'react';
-import { Container, Box } from '@mui/material';
-import Header from '../components/Header';
-import MainContent from '../components/MainContent.tsx';
-import '@fontsource/poppins/500.css';
+import { Box, IconButton, Menu, MenuItem } from '@mui/material';
+import NewDepartmentTable from '../../admin/components/Table/NewDepartmentTable.tsx';
 import { Employee } from '../../employees.tsx';
-import { Column } from '../../admin/components/Table/types.ts';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import MenuIcon from '@mui/icons-material/Menu';
+import PersonIcon from '@mui/icons-material/Person';
+import LogoutIcon from '@mui/icons-material/Logout';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 
 interface DashboardPageProps {
   employeeData: Employee | null;
   onLogout: () => void;
 }
 
-const columns: Column[] = [
-  { id: 'id', label: 'ID' },
-  { id: 'status', label: 'Status', filterable: true, filterValues: ['Present', 'Absent'] },
-];
-
 const DashboardPage: React.FC<DashboardPageProps> = ({ employeeData, onLogout }) => {
-  const [tabIndex, setTabIndex] = useState<number>(0);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [showControls, setShowControls] = useState(false);
+  const navigate = useNavigate();
+  const { t } = useTranslation();
 
   if (!employeeData) {
     return <div>従業員データの読み込み...</div>;
   }
-
-  if (!employeeData.id) {
-    return <div>従業員データが見つかりませんでした。</div>;
-  }
-
-  const handleTabChange = (event: React.ChangeEvent<{}>, newValue: number) => {
-    setTabIndex(newValue);
-  };
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -40,39 +32,103 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ employeeData, onLogout })
     setAnchorEl(null);
   };
 
+  const handleGoToPersonal = () => {
+    handleMenuClose();
+    navigate('/employee/personal');
+  };
+
+  const handleGoToAdmin = () => {
+    handleMenuClose();
+    navigate('/admin');
+  };
+
+  const handleLogout = () => {
+    handleMenuClose();
+    onLogout();
+    navigate('/login');
+  };
+
+  const isAdmin = employeeData.role === 'ADMIN';
+
   return (
-    <Container 
-      maxWidth={false}
-      sx={{ 
-        maxWidth: '460px', // кастомная ширина
-        mx: 'auto',  
-        background: '#f4f4f4',
-        minHeight: '100vh',
-        display: 'flex', 
-        flexDirection: 'column', 
-        overflow: 'hidden', 
-        p: 2,
-        paddingBottom: '20px',
-        pt: 4,
-      }}
-    >
-      <Header
-        onLogout={onLogout}
-        anchorEl={anchorEl}
-        handleMenuOpen={handleMenuOpen}
-        handleMenuClose={handleMenuClose}
-      />
-      <Box sx={{ flexGrow: 1 }}>
-        <MainContent 
-          tabIndex={tabIndex} 
-          handleTabChange={handleTabChange}
-          attendanceSummary={employeeData.attendanceSummary}
-          employeeId={employeeData.id}
-          username={employeeData.username} 
-          tableColumns={columns}
-        />
+    <Box sx={{ 
+      height: '100vh', 
+      width: '100vw', 
+      position: 'relative',
+      backgroundColor: '#F5F8FA'
+    }}>
+      {/* Hamburger menu in top right corner */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 20,
+          right: 20,
+          zIndex: 1001,
+        }}
+      >
+        <IconButton
+          onClick={handleMenuOpen}
+          sx={{
+            backgroundColor: 'rgba(16, 94, 130, 0.9)',
+            color: 'white',
+            width: 50,
+            height: 50,
+            '&:hover': {
+              backgroundColor: '#0D4D6B',
+            },
+            boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+          }}
+        >
+          <MenuIcon />
+        </IconButton>
+
+        {/* Dropdown menu */}
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          PaperProps={{
+            sx: {
+              mt: 1,
+              minWidth: 200,
+              borderRadius: 2,
+              boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+            }
+          }}
+        >
+          <MenuItem onClick={handleGoToPersonal}>
+            <PersonIcon sx={{ mr: 2, color: "#105E82" }} />
+            個人ページ
+          </MenuItem>
+          
+          {isAdmin && (
+            <MenuItem onClick={handleGoToAdmin}>
+              <AdminPanelSettingsIcon sx={{ mr: 2, color: "#105E82" }} />
+              管理パネル
+            </MenuItem>
+          )}
+
+          <MenuItem onClick={handleLogout}>
+            <LogoutIcon sx={{ mr: 2, color: "#d32f2f" }} />
+            ログアウト
+          </MenuItem>
+        </Menu>
       </Box>
-    </Container>
+
+      {/* Main content - NewDepartmentTable in employee mode */}
+      <NewDepartmentTable 
+        mode="employee"
+        onControlsHover={setShowControls}
+      />
+    </Box>
   );
 };
 
